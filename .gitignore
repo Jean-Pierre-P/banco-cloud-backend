@@ -1,0 +1,18 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+*.log
+
+# Secretos / config local (NUNCA subir credenciales)
+.env
+application-local.yml
+application-local.properties
