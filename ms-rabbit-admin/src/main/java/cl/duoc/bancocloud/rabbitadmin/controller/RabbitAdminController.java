@@ -6,7 +6,6 @@ import cl.duoc.bancocloud.rabbitadmin.dto.QueueRequest;
 import cl.duoc.bancocloud.rabbitadmin.service.RabbitAdminService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,10 +14,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/rabbit-admin")
-@RequiredArgsConstructor
 public class RabbitAdminController {
 
     private final RabbitAdminService rabbitAdminService;
+
+    // Constructor manual que reemplaza a @RequiredArgsConstructor
+    public RabbitAdminController(RabbitAdminService rabbitAdminService) {
+        this.rabbitAdminService = rabbitAdminService;
+    }
 
     @PostMapping("/queues")
     public ResponseEntity<Map<String, String>> createQueue(@Valid @RequestBody QueueRequest request) {

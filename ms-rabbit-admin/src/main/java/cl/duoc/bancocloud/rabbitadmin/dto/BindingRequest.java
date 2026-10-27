@@ -2,8 +2,42 @@ package cl.duoc.bancocloud.rabbitadmin.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record BindingRequest(
-        @NotBlank(message = "La cola es obligatoria") String queue,
-        @NotBlank(message = "El exchange es obligatorio") String exchange,
-        String routingKey) {          // puede ir vacío (ej: exchange FANOUT)
+public class BindingRequest {
+
+    @NotBlank(message = "El nombre de la cola es obligatorio")
+    private String queueName;
+
+    @NotBlank(message = "El nombre del exchange es obligatorio")
+    private String exchangeName;
+
+    @NotBlank(message = "La routing key es obligatoria")
+    private String routingKey;
+
+    // Constructores manuales
+    public BindingRequest() {}
+
+    // Getters y Setters manuales
+    public String getQueueName() {
+        return queueName;
+    }
+
+    public void setQueueName(String queueName) {
+        this.queueName = queueName;
+    }
+
+    public String getExchangeName() {
+        return exchangeName;
+    }
+
+    public void setExchangeName(String exchangeName) {
+        this.exchangeName = exchangeName;
+    }
+
+    public String getRoutingKey() {
+        return routingKey;
+    }
+
+    public void setRoutingKey(String routingKey) {
+        this.routingKey = routingKey;
+    }
 }

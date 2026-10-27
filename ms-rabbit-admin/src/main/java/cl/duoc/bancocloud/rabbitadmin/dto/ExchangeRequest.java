@@ -1,16 +1,42 @@
 package cl.duoc.bancocloud.rabbitadmin.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
-public record ExchangeRequest(
-        @NotBlank(message = "El nombre del exchange es obligatorio")
-        @Size(max = 255, message = "El nombre no puede superar 255 caracteres")
-        @Pattern(regexp = "^[A-Za-z0-9._-]*$", message = "El nombre solo admite letras, números, punto, guion y guion bajo")
-        String name,
-        @NotNull(message = "El tipo es obligatorio (DIRECT, TOPIC o FANOUT)") TipoExchange type,
-        Boolean durable,
-        Boolean autoDelete) {
+public class ExchangeRequest {
+
+    @NotBlank(message = "El nombre del exchange es obligatorio")
+    private String name;
+
+    @NotBlank(message = "El tipo de exchange es obligatorio")
+    private String type;
+
+    private boolean durable = true;
+
+    // Constructores manuales
+    public ExchangeRequest() {}
+
+    // Getters y Setters manuales
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public boolean isDurable() {
+        return durable;
+    }
+
+    public void setDurable(boolean durable) {
+        this.durable = durable;
+    }
 }

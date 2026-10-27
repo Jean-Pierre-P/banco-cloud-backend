@@ -3,20 +3,25 @@ package cl.duoc.bancocloud.rabbitadmin.service;
 import cl.duoc.bancocloud.rabbitadmin.dto.BindingRequest;
 import cl.duoc.bancocloud.rabbitadmin.dto.ExchangeRequest;
 import cl.duoc.bancocloud.rabbitadmin.dto.QueueRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.*;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class RabbitAdminService {
+
+    // Logger nativo que reemplaza a @Slf4j
+    private static final Logger log = LoggerFactory.getLogger(RabbitAdminService.class);
 
     private final AmqpAdmin amqpAdmin;
 
+    // Constructor manual que reemplaza a @RequiredArgsConstructor
+    public RabbitAdminService(AmqpAdmin amqpAdmin) {
+        this.amqpAdmin = amqpAdmin;
+    }
+
     public String crearCola(QueueRequest request) {
-        // Queue(String name, boolean durable, boolean exclusive, boolean autoDelete)
         Queue queue = new Queue(request.getName(), request.isDurable(), false, false);
         String resultName = amqpAdmin.declareQueue(queue);
         log.info("Cola creada exitosamente en RabbitMQ: {}", resultName);
