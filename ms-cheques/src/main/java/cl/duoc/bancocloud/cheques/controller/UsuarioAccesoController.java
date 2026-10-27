@@ -2,17 +2,19 @@ package cl.duoc.bancocloud.cheques.controller;
 
 import cl.duoc.bancocloud.cheques.model.UsuarioCliente;
 import cl.duoc.bancocloud.cheques.repository.UsuarioClienteRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/usuarios")
-@RequiredArgsConstructor
 public class UsuarioAccesoController {
 
     private final UsuarioClienteRepository usuarioRepository;
     // Opcional: Inyecta tu ChequeEventProducer para enviar el mensaje a RabbitMQ
+
+    public UsuarioAccesoController(UsuarioClienteRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
+    }
 
     @PatchMapping("/{id}/autorizar")
     public ResponseEntity<UsuarioCliente> autorizarAcceso(@PathVariable Long id) {
