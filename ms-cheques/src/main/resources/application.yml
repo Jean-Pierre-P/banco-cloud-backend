@@ -5,30 +5,26 @@ spring:
   application:
     name: ms-cheques
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/banco_cloud}
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:}          # viene de variable de entorno, no se escribe aquí
+    url: ${DB_URL:jdbc:h2:mem:bancocloud;DB_CLOSE_DELAY=-1}
+    username: ${DB_USER:sa}
+    password: ${DB_PASSWORD:}
   jpa:
     hibernate:
       ddl-auto: update
+    show-sql: true
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
-    port: ${RABBIT_PORT:5672}
-    username: ${RABBIT_USER:guest}
-    password: ${RABBIT_PASSWORD:guest}
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${JWT_ISSUER_URI}   # URL del IDaaS (Cognito, Auth0, Keycloak...)
+    port: 5672
+    username: ${RABBIT_USER:admin}
+    password: ${RABBIT_PASS:admin123}
 
 app:
-  security:
-    roles-claim: ${JWT_ROLES_CLAIM:roles}  # claim del JWT con los roles (ej: roles, cognito:groups)
-  # Nombres de mensajería CENTRALIZADOS: no hay strings sueltos en el código
-  messaging:
-    exchange: banco.cheques.exchange
+  rabbitmq:
+    exchanges:
+      principal: banco.cheques.exchange
+    queues:
+      emision: banco.cheques.emision.queue
+      acceso: banco.usuarios.acceso.queue
     routing-keys:
-      cheque-emitido: cheque.emitido
-      cheque-estado: cheque.estado
-      cheque-devuelto: cheque.devuelto
+      emision: banco.routing.emision
+      acceso: banco.routing.acceso

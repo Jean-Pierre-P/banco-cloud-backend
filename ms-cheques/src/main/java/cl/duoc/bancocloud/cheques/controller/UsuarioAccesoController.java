@@ -2,6 +2,8 @@ package cl.duoc.bancocloud.cheques.controller;
 
 import cl.duoc.bancocloud.cheques.model.UsuarioCliente;
 import cl.duoc.bancocloud.cheques.repository.UsuarioClienteRepository;
+import cl.duoc.bancocloud.cheques.messaging.producer.UsuarioEventProducer;
+import cl.duoc.bancocloud.cheques.messaging.event.UsuarioAutorizadoEvent;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,10 +12,11 @@ import org.springframework.web.bind.annotation.*;
 public class UsuarioAccesoController {
 
     private final UsuarioClienteRepository usuarioRepository;
-    // Opcional: Inyecta tu ChequeEventProducer para enviar el mensaje a RabbitMQ
+    private final UsuarioEventProducer usuarioEventProducer;
 
-    public UsuarioAccesoController(UsuarioClienteRepository usuarioRepository) {
+    public UsuarioAccesoController(UsuarioClienteRepository usuarioRepository, UsuarioEventProducer usuarioEventProducer) {
         this.usuarioRepository = usuarioRepository;
+        this.usuarioEventProducer = usuarioEventProducer;
     }
 
     @PatchMapping("/{id}/autorizar")
@@ -24,8 +27,9 @@ public class UsuarioAccesoController {
         cliente.setAccesoAutorizado(true);
         UsuarioCliente actualizado = usuarioRepository.save(cliente);
 
-        // Aquí llamas a tu producer para enviar a la cola banco.usuarios.acceso.queue
-        // chequeEventProducer.enviarEventoAutorizacion(actualizado);
+        usuarioEventProducer.enviarEventoAutorizacion(
+            new UsuarioAutorizadoEvent(actualizado.getId(), actualizado.getEmail())
+        );
 
         return ResponseEntity.ok(actualizado);
     }

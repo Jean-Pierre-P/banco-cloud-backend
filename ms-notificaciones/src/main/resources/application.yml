@@ -6,29 +6,23 @@ spring:
     name: ms-notificaciones
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
-    port: ${RABBIT_PORT:5672}
-    username: ${RABBIT_USER:guest}
-    password: ${RABBIT_PASSWORD:guest}
+    port: 5672
+    username: ${RABBIT_USER:admin}
+    password: ${RABBIT_PASS:admin123}
     listener:
       simple:
-        acknowledge-mode: manual     # ACK explícito en cada consumidor
-        prefetch: 10
+        acknowledge-mode: manual
+        default-requeue-rejected: false
 
-# Toda la topología de mensajería está CENTRALIZADA aquí
 app:
-  messaging:
-    exchange: banco.cheques.exchange
-    dead-letter-exchange: banco.cheques.dlx
+  rabbitmq:
+    exchanges:
+      principal: banco.cheques.exchange
     queues:
-      cheque-emitido:
-        name: cheque.emitido.queue
-        routing-key: cheque.emitido
-        dlq: cheque.emitido.dlq
-      cheque-estado:
-        name: cheque.estado.queue
-        routing-key: cheque.estado
-        dlq: cheque.estado.dlq
-      cheque-devuelto:
-        name: cheque.devuelto.queue
-        routing-key: cheque.devuelto
-        dlq: cheque.devuelto.dlq
+      emision: banco.cheques.emision.queue
+      acceso: banco.usuarios.acceso.queue
+      dlq: banco.cheques.dlq
+    routing-keys:
+      emision: banco.routing.emision
+      acceso: banco.routing.acceso
+      dlq: banco.routing.dlq
