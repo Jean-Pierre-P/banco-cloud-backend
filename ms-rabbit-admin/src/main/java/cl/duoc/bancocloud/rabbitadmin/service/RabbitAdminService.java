@@ -1,102 +1,76 @@
 package cl.duoc.bancocloud.rabbitadmin.service;
 
-import cl.duoc.bancocloud.rabbitadmin.dto.*;
-import cl.duoc.bancocloud.rabbitadmin.exception.RecursoNoEncontradoException;
-import org.springframework.amqp.core.AmqpAdmin;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.ExchangeBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.QueueBuilder;
-import org.springframework.amqp.core.QueueInformation;
+import cl.duoc.bancocloud.rabbitadmin.dto.BindingRequest;
+import cl.duoc.bancocloud.rabbitadmin.dto.ExchangeRequest;
+import cl.duoc.bancocloud.rabbitadmin.dto.QueueRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.*;
 import org.springframework.stereotype.Service;
 
-/**
- * Encapsula TODA la interacción con RabbitMQ. Los controladores solo llaman a estos métodos
- * y no conocen la librería de RabbitMQ.
- */
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class RabbitAdminService {
 
     private final AmqpAdmin amqpAdmin;
 
-    public RabbitAdminService(AmqpAdmin amqpAdmin) {
-        this.amqpAdmin = amqpAdmin;
+    public String crearCola(QueueRequest request) {
+        // Queue(String name, boolean durable, boolean exclusive, boolean autoDelete)
+        Queue queue = new Queue(request.getName(), request.isDurable(), false, false);
+        String resultName = amqpAdmin.declareQueue(queue);
+        log.info("Cola creada exitosamente en RabbitMQ: {}", resultName);
+        return resultName;
     }
 
-    // ---------- Colas ----------
-    public void crearCola(QueueRequest req) {
-        boolean tieneDlx = req.deadLetterExchange() != null && !req.deadLetterExchange().isBlank();
-        boolean tieneDlk = req.deadLetterRoutingKey() != null && !req.deadLetterRoutingKey().isBlank();
-        if (tieneDlk && !tieneDlx) {
-            throw new IllegalArgumentException("Si indica deadLetterRoutingKey debe indicar también deadLetterExchange");
+    public void eliminarCola(String nombreCola) {
+        boolean eliminada = amqpAdmin.deleteQueue(nombreCola);
+        if (!eliminada) {
+            throw new IllegalArgumentException("No se pudo eliminar la cola o no existe: " + nombreCola);
         }
-
-        boolean durable = req.durable() == null || req.durable();
-        QueueBuilder builder = durable ? QueueBuilder.durable(req.name()) : QueueBuilder.nonDurable(req.name());
-        if (Boolean.TRUE.equals(req.autoDelete())) {
-            builder.autoDelete();
-        }
-        if (tieneDlx) {
-            builder.deadLetterExchange(req.deadLetterExchange());
-        }
-        if (tieneDlk) {
-            builder.deadLetterRoutingKey(req.deadLetterRoutingKey());
-        }
-        if (req.messageTtlMs() != null) {
-            builder.ttl(req.messageTtlMs().intValue());
-        }
-        Queue queue = builder.build();
-        amqpAdmin.declareQueue(queue);
+        log.info("Cola eliminada de RabbitMQ: {}", nombreCola);
     }
 
-    public QueueInfoResponse obtenerCola(String name) {
-        QueueInformation info = amqpAdmin.getQueueInfo(name);
-        if (info == null) {
-            throw new RecursoNoEncontradoException("No existe la cola '" + name + "'");
+    public void crearExchange(ExchangeRequest request) {
+        Exchange exchange;
+        switch (request.getType().toLowerCase()) {
+            case "direct":
+                exchange = new DirectExchange(request.getName(), request.isDurable(), false);
+                break;
+            case "topic":
+                exchange = new TopicExchange(request.getName(), request.isDurable(), false);
+                break;
+            case "fanout":
+                exchange = new FanoutExchange(request.getName(), request.isDurable(), false);
+                break;
+            case "headers":
+                exchange = new HeadersExchange(request.getName(), request.isDurable(), false);
+                break;
+            default:
+                throw new IllegalArgumentException("Tipo de exchange no soportado: " + request.getType());
         }
-        return new QueueInfoResponse(info.getName(), info.getMessageCount(), info.getConsumerCount());
+        amqpAdmin.declareExchange(exchange);
+        log.info("Exchange [{}] de tipo [{}] creado exitosamente.", request.getName(), request.getType());
     }
 
-    public void eliminarCola(String name) {
-        if (!amqpAdmin.deleteQueue(name)) {
-            throw new RecursoNoEncontradoException("No existe la cola '" + name + "'");
+    public void eliminarExchange(String nombreExchange) {
+        boolean eliminado = amqpAdmin.deleteExchange(nombreExchange);
+        if (!eliminado) {
+            throw new IllegalArgumentException("No se pudo eliminar el exchange o no existe: " + nombreExchange);
         }
+        log.info("Exchange eliminado de RabbitMQ: {}", nombreExchange);
     }
 
-    // ---------- Exchanges ----------
-    public void crearExchange(ExchangeRequest req) {
-        ExchangeBuilder builder = switch (req.type()) {
-            case DIRECT -> ExchangeBuilder.directExchange(req.name());
-            case TOPIC -> ExchangeBuilder.topicExchange(req.name());
-            case FANOUT -> ExchangeBuilder.fanoutExchange(req.name());
-        };
-        builder.durable(req.durable() == null || req.durable());
-        if (Boolean.TRUE.equals(req.autoDelete())) {
-            builder.autoDelete();
-        }
-        amqpAdmin.declareExchange(builder.build());
-    }
-
-    public void eliminarExchange(String name) {
-        if (!amqpAdmin.deleteExchange(name)) {
-            throw new RecursoNoEncontradoException("No existe el exchange '" + name + "'");
-        }
-    }
-
-    // ---------- Bindings ----------
-    public void crearBinding(BindingRequest req) {
-        amqpAdmin.declareBinding(construir(req.queue(), req.exchange(), req.routingKey()));
-    }
-
-    public void eliminarBinding(String queue, String exchange, String routingKey) {
-        if (queue == null || queue.isBlank() || exchange == null || exchange.isBlank()) {
-            throw new IllegalArgumentException("Los parámetros 'queue' y 'exchange' son obligatorios");
-        }
-        amqpAdmin.removeBinding(construir(queue, exchange, routingKey));
-    }
-
-    private Binding construir(String queue, String exchange, String routingKey) {
-        return new Binding(queue, Binding.DestinationType.QUEUE, exchange,
-                routingKey == null ? "" : routingKey, null);
+    public void crearBinding(BindingRequest request) {
+        Binding binding = new Binding(
+                request.getQueueName(),
+                Binding.DestinationType.QUEUE,
+                request.getExchangeName(),
+                request.getRoutingKey(),
+                null
+        );
+        amqpAdmin.declareBinding(binding);
+        log.info("Binding creado entre Exchange [{}] y Cola [{}] con RoutingKey [{}]",
+                request.getExchangeName(), request.getQueueName(), request.getRoutingKey());
     }
 }

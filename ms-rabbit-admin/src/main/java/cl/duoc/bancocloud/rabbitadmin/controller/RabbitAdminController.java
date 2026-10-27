@@ -1,66 +1,55 @@
 package cl.duoc.bancocloud.rabbitadmin.controller;
 
-import cl.duoc.bancocloud.rabbitadmin.dto.*;
+import cl.duoc.bancocloud.rabbitadmin.dto.BindingRequest;
+import cl.duoc.bancocloud.rabbitadmin.dto.ExchangeRequest;
+import cl.duoc.bancocloud.rabbitadmin.dto.QueueRequest;
 import cl.duoc.bancocloud.rabbitadmin.service.RabbitAdminService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/** API REST de administración de RabbitMQ. Solo usuarios con rol ADMIN. */
+import java.util.Map;
+
 @RestController
-@RequestMapping("/api/rabbit")
-@PreAuthorize("hasRole('ADMIN')")
+@RequestMapping("/api/v1/rabbit-admin")
+@RequiredArgsConstructor
 public class RabbitAdminController {
 
-    private final RabbitAdminService service;
+    private final RabbitAdminService rabbitAdminService;
 
-    public RabbitAdminController(RabbitAdminService service) {
-        this.service = service;
-    }
-
-    // ---------- /queues ----------
     @PostMapping("/queues")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void crearCola(@Valid @RequestBody QueueRequest req) {
-        service.crearCola(req);
-    }
-
-    @GetMapping("/queues/{name}")
-    public QueueInfoResponse obtenerCola(@PathVariable String name) {
-        return service.obtenerCola(name);
+    public ResponseEntity<Map<String, String>> createQueue(@Valid @RequestBody QueueRequest request) {
+        String queueName = rabbitAdminService.crearCola(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("mensaje", "Cola creada correctamente", "cola", queueName));
     }
 
     @DeleteMapping("/queues/{name}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminarCola(@PathVariable String name) {
-        service.eliminarCola(name);
+    public ResponseEntity<Map<String, String>> deleteQueue(@PathVariable @NotBlank String name) {
+        rabbitAdminService.eliminarCola(name);
+        return ResponseEntity.ok(Map.of("mensaje", "Cola eliminada correctamente", "cola", name));
     }
 
-    // ---------- /exchanges ----------
     @PostMapping("/exchanges")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void crearExchange(@Valid @RequestBody ExchangeRequest req) {
-        service.crearExchange(req);
+    public ResponseEntity<Map<String, String>> createExchange(@Valid @RequestBody ExchangeRequest request) {
+        rabbitAdminService.crearExchange(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("mensaje", "Exchange creado correctamente", "exchange", request.getName()));
     }
 
     @DeleteMapping("/exchanges/{name}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminarExchange(@PathVariable String name) {
-        service.eliminarExchange(name);
+    public ResponseEntity<Map<String, String>> deleteExchange(@PathVariable @NotBlank String name) {
+        rabbitAdminService.eliminarExchange(name);
+        return ResponseEntity.ok(Map.of("mensaje", "Exchange eliminado correctamente", "exchange", name));
     }
 
-    // ---------- /bindings ----------
     @PostMapping("/bindings")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void crearBinding(@Valid @RequestBody BindingRequest req) {
-        service.crearBinding(req);
-    }
-
-    @DeleteMapping("/bindings")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminarBinding(@RequestParam String queue, @RequestParam String exchange,
-                                @RequestParam(defaultValue = "") String routingKey) {
-        service.eliminarBinding(queue, exchange, routingKey);
+    public ResponseEntity<Map<String, String>> createBinding(@Valid @RequestBody BindingRequest request) {
+        rabbitAdminService.crearBinding(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("mensaje", "Binding creado exitosamente"));
     }
 }
