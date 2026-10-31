@@ -15,6 +15,7 @@ spring:
         default-requeue-rejected: false
 
 app:
+  # Estructura anterior (se mantiene por si otra clase aún la usa)
   rabbitmq:
     exchanges:
       principal: banco.cheques.exchange
@@ -26,3 +27,23 @@ app:
       emision: banco.routing.emision
       acceso: banco.routing.acceso
       dlq: banco.routing.dlq
+
+  # Estructura que usan ChequeConsumer y (probablemente) la config de colas
+  messaging:
+    exchange:
+      name: banco.cheques.exchange
+    dlx:
+      name: banco.cheques.dlx
+    queues:
+      cheque-emitido:
+        name: cheque.emitido.queue
+        dlq: cheque.emitido.dlq
+        routing-key: cheque.emitido
+      cheque-estado:
+        name: cheque.estado.queue
+        dlq: cheque.estado.dlq
+        routing-key: cheque.estado
+      cheque-devuelto:
+        name: cheque.devuelto.queue
+        dlq: cheque.devuelto.dlq
+        routing-key: cheque.devuelto
