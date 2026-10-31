@@ -1,0 +1,5 @@
+$env:DB_URL="jdbc:mysql://bancocloud-db.cp2q2q6e4463.us-east-1.rds.amazonaws.com:3306/bancocloud?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+$env:DB_USER="admin"
+$env:DB_PASSWORD="BackendCloud123"
+$env:JWT_ISSUER_URI="https://cognito-idp.us-east-1.amazonaws.com/us-east-1_UmxXyMwhI"
+$env:JWT_ROLES_CLAIM="cognito:groups"
