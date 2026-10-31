@@ -1,0 +1,67 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS}
+    ports:
+      - "15672:15672"
+    volumes:
+      - rabbit-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  ms-notificaciones:
+    build:
+      context: .
+      args:
+        MODULE: ms-notificaciones
+    restart: unless-stopped
+    environment:
+      RABBIT_HOST: rabbitmq
+      RABBIT_USER: ${RABBIT_USER}
+      RABBIT_PASS: ${RABBIT_PASS}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  ms-cheques:
+    build:
+      context: .
+      args:
+        MODULE: ms-cheques
+    restart: unless-stopped
+    environment:
+      RABBIT_HOST: rabbitmq
+      RABBIT_USER: ${RABBIT_USER}
+      RABBIT_PASS: ${RABBIT_PASS}
+      DB_URL: ${DB_URL}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_ISSUER_URI: ${JWT_ISSUER_URI}
+      JWT_ROLES_CLAIM: ${JWT_ROLES_CLAIM}
+    depends_on:
+      - ms-notificaciones
+
+  ms-rabbit-admin:
+    build:
+      context: .
+      args:
+        MODULE: ms-rabbit-admin
+    restart: unless-stopped
+    environment:
+      RABBIT_HOST: rabbitmq
+      RABBIT_USER: ${RABBIT_USER}
+      RABBIT_PASS: ${RABBIT_PASS}
+      JWT_ISSUER_URI: ${JWT_ISSUER_URI}
+      JWT_ROLES_CLAIM: ${JWT_ROLES_CLAIM}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  rabbit-data:
