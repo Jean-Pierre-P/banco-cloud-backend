@@ -39,7 +39,7 @@ public class ChequeEventProducer {
     }
 
     private void enviar(String routingKey, ChequeEvent event) {
-        rabbitTemplate.convertAndSend(props.exchange(), routingKey, event);
+        rabbitTemplate.convertAndSend(props.exchange().principal(), routingKey, event);
         log.info("Evento {} publicado (cheque {}) con routing key {}", event.tipoEvento(), event.chequeId(), routingKey);
     }
 }

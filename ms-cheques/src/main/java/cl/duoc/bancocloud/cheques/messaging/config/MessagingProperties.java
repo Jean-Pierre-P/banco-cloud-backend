@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "app.rabbitmq")
 public class MessagingProperties {
-    
+
     private Exchanges exchanges = new Exchanges();
     private Queues queues = new Queues();
     private RoutingKeys routingKeys = new RoutingKeys();
@@ -45,11 +45,26 @@ public class MessagingProperties {
     public static class RoutingKeys {
         private String emision;
         private String acceso;
+        private String chequeEmitido;
+        private String chequeEstado;
+        private String chequeDevuelto;
+
         public String getEmision() { return emision; }
         public void setEmision(String emision) { this.emision = emision; }
         public String getAcceso() { return acceso; }
         public void setAcceso(String acceso) { this.acceso = acceso; }
+
+        public String getChequeEmitido() { return chequeEmitido; }
+        public void setChequeEmitido(String chequeEmitido) { this.chequeEmitido = chequeEmitido; }
+        public String getChequeEstado() { return chequeEstado; }
+        public void setChequeEstado(String chequeEstado) { this.chequeEstado = chequeEstado; }
+        public String getChequeDevuelto() { return chequeDevuelto; }
+        public void setChequeDevuelto(String chequeDevuelto) { this.chequeDevuelto = chequeDevuelto; }
+
         public String emision() { return emision; }
         public String acceso() { return acceso; }
+        public String chequeEmitido() { return chequeEmitido; }
+        public String chequeEstado() { return chequeEstado; }
+        public String chequeDevuelto() { return chequeDevuelto; }
     }
 }

@@ -17,7 +17,7 @@ public class RabbitConfig {
 
     @Bean
     DirectExchange chequesExchange(MessagingProperties props) {
-        return ExchangeBuilder.directExchange(props.exchange()).durable(true).build();
+        return ExchangeBuilder.directExchange(props.exchange().principal()).durable(true).build();
     }
 
     /** Los mensajes viajan como JSON (RabbitTemplate usa este converter automáticamente). */

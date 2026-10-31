@@ -5,9 +5,9 @@ spring:
   application:
     name: ms-cheques
   datasource:
-    url: jdbc:mysql://bancocloud-db.cp2q2q6e4463.us-east-1.rds.amazonaws.com:3306/bancocloud?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: admin
-    password: BancoCloud123
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -32,3 +32,6 @@ app:
     routing-keys:
       emision: banco.routing.emision
       acceso: banco.routing.acceso
+      cheque-emitido: cheque.emitido
+      cheque-estado: cheque.estado
+      cheque-devuelto: cheque.devuelto
