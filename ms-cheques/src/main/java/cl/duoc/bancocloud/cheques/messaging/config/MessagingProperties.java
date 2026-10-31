@@ -11,6 +11,7 @@ public class MessagingProperties {
     private Queues queues = new Queues();
     private RoutingKeys routingKeys = new RoutingKeys();
 
+    // Getters y Setters estándar
     public Exchanges getExchanges() { return exchanges; }
     public void setExchanges(Exchanges exchanges) { this.exchanges = exchanges; }
     public Queues getQueues() { return queues; }
@@ -18,10 +19,16 @@ public class MessagingProperties {
     public RoutingKeys getRoutingKeys() { return routingKeys; }
     public void setRoutingKeys(RoutingKeys routingKeys) { this.routingKeys = routingKeys; }
 
+    // Métodos fluidos (compatibles con .exchange() y .routingKeys())
+    public Exchanges exchange() { return exchanges; }
+    public RoutingKeys routingKeys() { return routingKeys; }
+    public Queues queues() { return queues; }
+
     public static class Exchanges {
         private String principal;
         public String getPrincipal() { return principal; }
         public void setPrincipal(String principal) { this.principal = principal; }
+        public String principal() { return principal; }
     }
 
     public static class Queues {
@@ -31,6 +38,8 @@ public class MessagingProperties {
         public void setEmision(String emision) { this.emision = emision; }
         public String getAcceso() { return acceso; }
         public void setAcceso(String acceso) { this.acceso = acceso; }
+        public String emision() { return emision; }
+        public String acceso() { return acceso; }
     }
 
     public static class RoutingKeys {
@@ -40,5 +49,7 @@ public class MessagingProperties {
         public void setEmision(String emision) { this.emision = emision; }
         public String getAcceso() { return acceso; }
         public void setAcceso(String acceso) { this.acceso = acceso; }
+        public String emision() { return emision; }
+        public String acceso() { return acceso; }
     }
 }
