@@ -16,7 +16,7 @@ public class UsuarioConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(UsuarioConsumer.class);
 
-    @RabbitListener(queues = "${app.rabbitmq.queues.acceso}")
+    @RabbitListener(queues = "${app.messaging.queues.acceso.name}")
     public void consumirAutorizacion(
             UsuarioAutorizadoEvent evento,
             Channel channel,

@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Declara exchange, DLX, colas, DLQs y bindings del dominio "cheques".
+ * Declara exchange, DLX, colas, DLQs y bindings de los dominios "cheques" y "acceso".
  * Los nombres vienen de application.yml (app.messaging.*).
  */
 @Configuration
@@ -33,6 +33,10 @@ public class RabbitConfig {
     @Value("${app.messaging.queues.cheque-devuelto.name}") private String devueltoQueue;
     @Value("${app.messaging.queues.cheque-devuelto.dlq}") private String devueltoDlq;
     @Value("${app.messaging.queues.cheque-devuelto.routing-key}") private String devueltoKey;
+
+    @Value("${app.messaging.queues.acceso.name}") private String accesoQueueName;
+    @Value("${app.messaging.queues.acceso.dlq}") private String accesoDlqName;
+    @Value("${app.messaging.queues.acceso.routing-key}") private String accesoKey;
 
     // ---------- Exchanges ----------
     @Bean
@@ -64,6 +68,12 @@ public class RabbitConfig {
                 .deadLetterExchange(dlxName).deadLetterRoutingKey(devueltoDlq).build();
     }
 
+    @Bean
+    Queue usuarioAccesoQueue() {
+        return QueueBuilder.durable(accesoQueueName)
+                .deadLetterExchange(dlxName).deadLetterRoutingKey(accesoDlqName).build();
+    }
+
     // ---------- DLQs ----------
     @Bean
     Queue chequeEmitidoDlq() {
@@ -78,6 +88,11 @@ public class RabbitConfig {
     @Bean
     Queue chequeDevueltoDlq() {
         return QueueBuilder.durable(devueltoDlq).build();
+    }
+
+    @Bean
+    Queue usuarioAccesoDlq() {
+        return QueueBuilder.durable(accesoDlqName).build();
     }
 
     // ---------- Bindings cola principal <- exchange ----------
@@ -96,6 +111,11 @@ public class RabbitConfig {
         return BindingBuilder.bind(chequeDevueltoQueue()).to(chequesExchange()).with(devueltoKey);
     }
 
+    @Bean
+    Binding bindingAcceso() {
+        return BindingBuilder.bind(usuarioAccesoQueue()).to(chequesExchange()).with(accesoKey);
+    }
+
     // ---------- Bindings DLQ <- DLX ----------
     @Bean
     Binding bindingEmitidoDlq() {
@@ -110,6 +130,11 @@ public class RabbitConfig {
     @Bean
     Binding bindingDevueltoDlq() {
         return BindingBuilder.bind(chequeDevueltoDlq()).to(chequesDlx()).with(devueltoDlq);
+    }
+
+    @Bean
+    Binding bindingAccesoDlq() {
+        return BindingBuilder.bind(usuarioAccesoDlq()).to(chequesDlx()).with(accesoDlqName);
     }
 
     // ---------- Convertidor JSON ----------
