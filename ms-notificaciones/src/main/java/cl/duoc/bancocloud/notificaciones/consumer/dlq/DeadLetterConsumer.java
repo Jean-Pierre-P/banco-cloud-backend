@@ -19,7 +19,8 @@ public class DeadLetterConsumer {
     @RabbitListener(queues = {
             "${app.messaging.queues.cheque-emitido.dlq}",
             "${app.messaging.queues.cheque-estado.dlq}",
-            "${app.messaging.queues.cheque-devuelto.dlq}"
+            "${app.messaging.queues.cheque-devuelto.dlq}",
+            "${app.messaging.queues.acceso.dlq}"
     }, ackMode = "AUTO")
     public void registrarMensajeMuerto(Message message) {
         String origen = message.getMessageProperties().getConsumerQueue();

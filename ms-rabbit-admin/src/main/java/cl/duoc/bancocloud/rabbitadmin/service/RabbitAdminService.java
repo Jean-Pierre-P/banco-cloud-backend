@@ -3,35 +3,62 @@ package cl.duoc.bancocloud.rabbitadmin.service;
 import cl.duoc.bancocloud.rabbitadmin.dto.BindingRequest;
 import cl.duoc.bancocloud.rabbitadmin.dto.ExchangeRequest;
 import cl.duoc.bancocloud.rabbitadmin.dto.QueueRequest;
+import cl.duoc.bancocloud.rabbitadmin.exception.RecursoNoEncontradoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.*;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Encapsula toda la administración de colas, exchanges y bindings de RabbitMQ.
+ * Los controladores solo llaman a estos métodos y no conocen la librería de RabbitMQ.
+ */
 @Service
 public class RabbitAdminService {
 
-    // Logger nativo que reemplaza a @Slf4j
     private static final Logger log = LoggerFactory.getLogger(RabbitAdminService.class);
 
     private final AmqpAdmin amqpAdmin;
 
-    // Constructor manual que reemplaza a @RequiredArgsConstructor
     public RabbitAdminService(AmqpAdmin amqpAdmin) {
         this.amqpAdmin = amqpAdmin;
     }
 
     public String crearCola(QueueRequest request) {
-        Queue queue = new Queue(request.getName(), request.isDurable(), false, false);
+        boolean tieneExchange = request.getExchange() != null && !request.getExchange().isBlank();
+        boolean tieneRoutingKey = request.getRoutingKey() != null && !request.getRoutingKey().isBlank();
+
+        if (tieneRoutingKey && !tieneExchange) {
+            throw new IllegalArgumentException("Se indicó routingKey sin exchange");
+        }
+
+        Map<String, Object> args = null;
+        if (request.getDeadLetterExchange() != null && !request.getDeadLetterExchange().isBlank()) {
+            args = new HashMap<>();
+            args.put("x-dead-letter-exchange", request.getDeadLetterExchange());
+        }
+
+        Queue queue = new Queue(request.getName(), request.isDurable(), false, request.isAutoDelete(), args);
         String resultName = amqpAdmin.declareQueue(queue);
         log.info("Cola creada exitosamente en RabbitMQ: {}", resultName);
+
+        if (tieneExchange && tieneRoutingKey) {
+            amqpAdmin.declareBinding(new Binding(
+                    request.getName(), Binding.DestinationType.QUEUE,
+                    request.getExchange(), request.getRoutingKey(), null));
+            log.info("Binding creado: exchange [{}] -> cola [{}] con routingKey [{}]",
+                    request.getExchange(), request.getName(), request.getRoutingKey());
+        }
         return resultName;
     }
 
     public void eliminarCola(String nombreCola) {
         boolean eliminada = amqpAdmin.deleteQueue(nombreCola);
         if (!eliminada) {
-            throw new IllegalArgumentException("No se pudo eliminar la cola o no existe: " + nombreCola);
+            throw new RecursoNoEncontradoException("La cola no existe: " + nombreCola);
         }
         log.info("Cola eliminada de RabbitMQ: {}", nombreCola);
     }
@@ -61,7 +88,7 @@ public class RabbitAdminService {
     public void eliminarExchange(String nombreExchange) {
         boolean eliminado = amqpAdmin.deleteExchange(nombreExchange);
         if (!eliminado) {
-            throw new IllegalArgumentException("No se pudo eliminar el exchange o no existe: " + nombreExchange);
+            throw new RecursoNoEncontradoException("El exchange no existe: " + nombreExchange);
         }
         log.info("Exchange eliminado de RabbitMQ: {}", nombreExchange);
     }
