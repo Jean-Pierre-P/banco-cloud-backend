@@ -6,6 +6,7 @@ import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.ExchangeBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Declara exchange, DLX, colas, DLQs y bindings de los dominios "cheques" y "acceso".
+ * Declara exchange (direct), DLX (topic), colas, DLQs y bindings de los dominios "cheques" y "acceso".
  * Los nombres vienen de application.yml (app.messaging.*).
  */
 @Configuration
@@ -39,14 +40,16 @@ public class RabbitConfig {
     @Value("${app.messaging.queues.acceso.routing-key}") private String accesoKey;
 
     // ---------- Exchanges ----------
+    /** Exchange principal de tipo DIRECT: la routing key debe coincidir exactamente. */
     @Bean
     DirectExchange chequesExchange() {
         return ExchangeBuilder.directExchange(exchangeName).durable(true).build();
     }
 
+    /** Dead Letter Exchange de tipo TOPIC: enruta los mensajes rechazados hacia las DLQ. */
     @Bean
-    DirectExchange chequesDlx() {
-        return ExchangeBuilder.directExchange(dlxName).durable(true).build();
+    TopicExchange chequesDlx() {
+        return ExchangeBuilder.topicExchange(dlxName).durable(true).build();
     }
 
     // ---------- Colas principales (con DLX configurado) ----------
@@ -95,7 +98,7 @@ public class RabbitConfig {
         return QueueBuilder.durable(accesoDlqName).build();
     }
 
-    // ---------- Bindings cola principal <- exchange ----------
+    // ---------- Bindings cola principal <- exchange direct ----------
     @Bean
     Binding bindingEmitido() {
         return BindingBuilder.bind(chequeEmitidoQueue()).to(chequesExchange()).with(emitidoKey);
@@ -116,7 +119,7 @@ public class RabbitConfig {
         return BindingBuilder.bind(usuarioAccesoQueue()).to(chequesExchange()).with(accesoKey);
     }
 
-    // ---------- Bindings DLQ <- DLX ----------
+    // ---------- Bindings DLQ <- DLX topic ----------
     @Bean
     Binding bindingEmitidoDlq() {
         return BindingBuilder.bind(chequeEmitidoDlq()).to(chequesDlx()).with(emitidoDlq);
