@@ -63,5 +63,20 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  web:
+    build:
+      context: ../frontend-banco-cloud
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+    depends_on:
+      - ms-cheques
+
 volumes:
   rabbit-data:
+  caddy-data:
