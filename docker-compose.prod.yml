@@ -1,19 +1,43 @@
 services:
   rabbitmq:
     image: rabbitmq:3.13-management
+    hostname: rabbit1
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS}
+      RABBITMQ_ERLANG_COOKIE: ${ERLANG_COOKIE}
     ports:
       - "15672:15672"
     volumes:
       - rabbit-data:/var/lib/rabbitmq
+    networks:
+      default:
+        aliases:
+          - rabbit1
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 10s
       retries: 10
+
+  rabbitmq2:
+    image: rabbitmq:3.13-management
+    hostname: rabbit2
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS}
+      RABBITMQ_ERLANG_COOKIE: ${ERLANG_COOKIE}
+    volumes:
+      - rabbit2-data:/var/lib/rabbitmq
+    networks:
+      default:
+        aliases:
+          - rabbit2
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
   ms-notificaciones:
     build:
@@ -80,4 +104,5 @@ services:
 
 volumes:
   rabbit-data:
+  rabbit2-data:
   caddy-data:
